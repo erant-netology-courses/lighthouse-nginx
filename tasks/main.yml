@@ -1,0 +1,40 @@
+---
+# tasks file for lighthouse
+- name: Install nginx and git
+  become: true
+  ansible.builtin.apt:
+    pkg:
+      - nginx
+      - git
+    update_cache: true
+  tags:
+    - install
+
+- name: Deploy Nginx config
+  become: true
+  ansible.builtin.template:
+    src: nginx.j2
+    dest: /etc/nginx/sites-available/lighthouse
+    mode: '0644'
+  notify: Restart nginx
+  tags:
+    - setup-lighthouse
+
+- name: Enable lighthouse site
+  become: true
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/lighthouse
+    dest: /etc/nginx/sites-enabled/lighthouse
+    state: link
+  notify: Restart nginx
+  tags:
+    - setup-lighthouse
+
+- name: Remove default nginx site
+  become: true
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  notify: Restart nginx
+  tags:
+    - setup-lighthouse-remove-default
